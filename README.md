@@ -74,6 +74,12 @@ obsidian-cf-sync sync ./vault
 
 See `obsidian-cf-sync --help` for more options.
 
+## ChatGPT
+
+Connect ChatGPT to your vaults through the Access-protected MCP endpoint at
+`https://<hostname>/api/mcp`. See the [ChatGPT setup guide](docs/chatgpt.md) for
+OAuth configuration, tools, file limits, and the end-to-end verification checklist.
+
 ## Requirements and costs
 
 CF Sync requires a Cloudflare account and a server that you deploy and maintain in that account, using Workers, Durable Objects, R2, and Cloudflare Access with Managed OAuth. You also need a custom domain for the server and an email address allowed by your Access policy.

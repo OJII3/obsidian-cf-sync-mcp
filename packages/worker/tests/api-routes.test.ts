@@ -81,3 +81,16 @@ describe("Public API routes", () => {
     });
   });
 });
+
+describe("MCP authentication boundary", () => {
+  it.each(["/mcp", `/mcp/files/${crypto.randomUUID()}/${crypto.randomUUID()}`])(
+    "rejects %s before MCP or download handling",
+    async (path) => {
+      const s = setup();
+      vi.mocked(authenticate).mockRejectedValue(new ApplicationError("unauthenticated", "Denied"));
+      expect((await s.call(path, path === "/mcp" ? "POST" : "GET")).status).toBe(401);
+      expect(s.vault.snapshot).not.toHaveBeenCalled();
+      expect(s.account.vault).not.toHaveBeenCalled();
+    },
+  );
+});

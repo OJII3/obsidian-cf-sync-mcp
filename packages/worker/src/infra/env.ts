@@ -7,4 +7,6 @@ export interface Env {
   BUCKET: R2Bucket;
   ACCESS_TEAM_DOMAIN: string;
   ACCESS_AUD: string;
+  /** Optional rotation of the revocable ChatGPT virtual device UUID. */
+  MCP_DEVICE_ID?: string;
 }

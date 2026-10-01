@@ -74,6 +74,11 @@ obsidian-cf-sync sync ./vault
 
 その他の使い方は`obsidian-cf-sync --help`を参照してください。
 
+## ChatGPT
+
+Accessで保護されたMCPエンドポイント`https://<ホスト名>/api/mcp`から、ChatGPTをVaultへ接続できます。
+OAuth設定、利用できるツール、ファイルの制限、動作確認の手順は[ChatGPT導入ガイド（英語）](docs/chatgpt.md)を参照してください。
+
 ## 利用要件と料金
 
 Cloudflareアカウントと、そのアカウント内に自分で構築・管理するサーバーが必要です。サーバーではWorkers・Durable Objects・R2と、Managed OAuthを有効にしたCloudflare Accessを使います。サーバー用のカスタムドメインと、Accessポリシーで許可するメールアドレスも必要です。

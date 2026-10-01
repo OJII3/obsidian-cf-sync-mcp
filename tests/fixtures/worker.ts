@@ -4,6 +4,7 @@ import { Hono } from "hono";
 import { Account } from "../../packages/worker/src/infra/durable-objects/account";
 import { Vault } from "../../packages/worker/src/infra/durable-objects/vault";
 import type { Env } from "../../packages/worker/src/infra/env";
+import { mcpRoutes } from "../../packages/worker/src/infra/http/mcp-routes";
 import { onError } from "../../packages/worker/src/infra/http/responses";
 import { jsonStream } from "../../packages/worker/src/infra/rpc-json";
 import { unwrapRpcResult } from "../../packages/worker/src/infra/rpc-result";
@@ -45,6 +46,16 @@ type TestContext = {
 const app = new Hono<TestContext>();
 
 app.onError(onError);
+app.route("/api", mcpRoutes);
+app.post("/revoke-mcp-device", async (c) => {
+  const { id } = await c.req.json<{ id: string }>();
+  unwrapRpcResult(await c.env.ACCOUNT.getByName("owner").revokeDevice(id));
+  return c.json({ ok: true });
+});
+app.post("/register-mcp-vault", async (c) => {
+  const input = await c.req.json<{ id: string; name: string }>();
+  return c.json(unwrapRpcResult(await c.env.ACCOUNT.getByName("owner").createVault(input)));
+});
 
 app.use("*", async (c, next) => {
   const vaultId = c.req.header("X-Vault-Id");

@@ -4,6 +4,7 @@ import { authenticate } from "../access-auth";
 import type { Env } from "../env";
 
 import { accountApiRoutes } from "./account-routes";
+import { mcpRoutes } from "./mcp-routes";
 import { notFound, onError } from "./responses";
 import { vaultApiRoutes } from "./vault-routes";
 
@@ -20,6 +21,7 @@ apiRoutes.use("*", async (c, next) => {
   await next();
 });
 
+apiRoutes.route("/", mcpRoutes);
 apiRoutes.route("/", accountApiRoutes);
 
 apiRoutes.route("/vaults/:vaultId", vaultApiRoutes);

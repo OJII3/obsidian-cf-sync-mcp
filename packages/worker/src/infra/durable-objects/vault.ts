@@ -11,6 +11,7 @@ import { ApplicationError } from "../../domain/errors";
 import type { VaultMeta } from "../../domain/vault-state";
 import { ApplyOperation } from "../../usecase/apply-operation";
 import { FlushVault } from "../../usecase/flush-vault";
+import { WriteText, writeTextSchema } from "../../usecase/write-text";
 import { BlobStorage } from "../blob-storage";
 import type { Env } from "../env";
 import { errorResponse } from "../http/responses";
@@ -71,6 +72,38 @@ export class Vault extends DurableObject<Env> {
           });
 
           return result;
+        }),
+      );
+    });
+  }
+
+  operationResult(
+    vaultId: string,
+    deviceId: string,
+    opId: string,
+  ): Promise<RpcResult<OperationResult | null>> {
+    return this.execute(
+      vaultId,
+      deviceId,
+      async () => (await this.repository.operationResult(opId)) ?? null,
+    );
+  }
+
+  writeText(
+    vaultId: string,
+    deviceId: string,
+    stream: ReadableStream<Uint8Array>,
+  ): Promise<RpcResult<OperationResult>> {
+    return rpcResult(async () => {
+      const input = v.parse(writeTextSchema, await new Response(stream).json());
+      return unwrapRpcResult(
+        await this.execute(vaultId, deviceId, async () => {
+          const writer = new WriteText(
+            this.repository,
+            this.sockets,
+            new BlobStorage(this.env.BUCKET, vaultId),
+          );
+          return writer.execute(input, deviceId);
         }),
       );
     });
