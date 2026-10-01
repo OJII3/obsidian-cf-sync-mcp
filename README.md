@@ -87,3 +87,7 @@ The plugin communicates with your configured server over HTTPS and secure WebSoc
 Sign-in uses your server's Cloudflare Access OAuth endpoints and, in your browser, the identity provider configured in Access. OAuth registration, authorization, and token exchange send the information needed to authenticate. Your Access policy controls who can sync, and your server verifies the Access JWT's signature, issuer, audience, and expiration.
 
 CF Sync does not provide end-to-end encryption. Transport is encrypted, but the server can read synced content, and the latest notes and attachments are stored in R2 as regular files.
+
+## Releasing
+
+Maintainers can run **Prepare release**, choose a version bump, and merge the generated PR to publish matching Obsidian plugin and npm CLI releases. See [the release guide](docs/releasing.md) for setup, recovery, and Worker deployment.

@@ -16,7 +16,10 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint",
-    "test": "vitest run",
+    "release:check": "node scripts/release-version.mjs",
+    "release:prepare": "node scripts/prepare-release.mjs",
+    "test": "pnpm test:release && vitest run",
+    "test:release": "node --test scripts/*.test.mjs",
     "typecheck": "pnpm -r typecheck && tsc --noEmit"
   },
   "devDependencies": {

@@ -1,32 +1,107 @@
 name: Release
 on:
-  push:
-    tags: ["[0-9]+.[0-9]+.[0-9]+"]
+  pull_request:
+    types: [closed]
+    branches: [main]
 permissions:
   contents: read
+concurrency:
+  group: release-${{ github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/prepare-v') && github.event.pull_request.head.repo.full_name == github.repository && 'publish' || github.run_id }}
+  queue: max
 jobs:
-  release:
+  validate:
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/prepare-v') && github.event.pull_request.head.repo.full_name == github.repository
+    uses: ./.github/workflows/ci.yml
+    with:
+      ref: ${{ github.event.pull_request.merge_commit_sha }}
+
+  draft:
+    needs: validate
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - name: Checkout merged commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - name: Check release versions
+        id: version
+        env:
+          RELEASE_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          tag=$(node scripts/release-version.mjs)
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+      - name: Create tag and draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        run: node scripts/draft-release.mjs
+
+  artifacts:
+    needs: draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: write
       id-token: write
       attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
       - uses: ./.github/actions/setup
-      - run: pnpm --filter @cf-sync/obsidian-plugin build
-      - run: pnpm build:cli
-      - name: Publish CLI to npm
-        working-directory: packages/cli
-        run: pnpm publish --no-git-checks
-      - name: Attest release assets
+      - run: pnpm build:plugin
+      - name: Attest plugin assets
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-path: |
             packages/obsidian-plugin/dist/main.js
             packages/obsidian-plugin/dist/manifest.json
-      - name: Create release
-        run: gh release create "$RELEASE_TAG" packages/obsidian-plugin/dist/main.js packages/obsidian-plugin/dist/manifest.json --verify-tag --generate-notes
+      - name: Upload plugin assets to draft
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.ref_name }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.draft.outputs.tag }}
+        run: gh release upload "$RELEASE_TAG" packages/obsidian-plugin/dist/main.js packages/obsidian-plugin/dist/manifest.json --clobber
+
+  npm:
+    needs: [draft, artifacts]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+      - uses: ./.github/actions/setup
+      - run: pnpm build:cli
+      - name: Publish CLI with npm trusted publishing
+        run: node scripts/publish-cli.mjs
+
+  release:
+    needs: [draft, artifacts, npm]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+      - uses: ./.github/actions/setup
+      - name: Publish completed release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.draft.outputs.tag }}
+        run: node scripts/publish-release.mjs
