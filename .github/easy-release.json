@@ -1,0 +1,5 @@
+{
+  "packageFiles": ["package.json", "packages/*/package.json", "manifest.json"],
+  "tagPrefix": "",
+  "updateCommand": "pnpm format"
+}
