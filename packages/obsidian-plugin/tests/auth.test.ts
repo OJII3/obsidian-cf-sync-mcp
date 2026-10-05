@@ -14,9 +14,9 @@ import type { HttpRequest, HttpResponse, Transport } from "../src/infra/http/tra
 beforeEach(() => setLanguage("ja"));
 afterEach(() => setLanguage("en"));
 
-const resource = "https://sync.example.com/api";
+const resource = "https://sync.example.com/api/";
 const resourceMetadataUrl =
-  "https://sync.example.com/.well-known/cloudflare-access-protected-resource/api";
+  "https://sync.example.com/.well-known/cloudflare-access-protected-resource/api/";
 
 const metadata = {
   issuer: "https://team.cloudflareaccess.com",
