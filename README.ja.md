@@ -29,7 +29,7 @@ https://github.com/user-attachments/assets/b756b66e-3c62-4bcb-9710-f038a03f7667
 
 1. CloudflareでR2を有効にし、`packages/worker/wrangler.toml`の`bucket_name`を自分のバケット名へ変更します。新規作成には`pnpm --filter @cf-sync/worker exec wrangler r2 bucket create <バケット名>`を使います。
 2. 自分のHTTPSホスト名をWorkerのカスタムドメインへ割り当てます。プラグインにはパスを含まないこのオリジンを設定します。
-3. Accessのself-hosted applicationで同期APIの`/api/*`を保護し、自分のメールアドレスだけを許可します。Managed OAuthを有効にします。
+3. Accessのself-hosted applicationで同期APIの`/api*`を保護し、自分のメールアドレスだけを許可します。OAuthの検出で`/api`自体にもchallengeが必要なため、`/api/*`ではなく`/api*`を指定してください。Managed OAuthを有効にします。
 4. OAuthの許可リダイレクトURIを`https://<ホスト名>/oauth/callback`に設定します。
 5. アクセストークンの寿命は15分、Grant sessionは30日を希望値として設定します。
 6. 以下のWorker環境変数を設定します。ローカル開発では同名の値を`packages/worker/.dev.vars`に記載します。

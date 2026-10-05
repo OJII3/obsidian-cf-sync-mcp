@@ -51,7 +51,7 @@ function resourceMetadataUrl(response: Response): string {
 }
 
 export async function discoverAuthorizationServer(origin: string, transport: Transport) {
-  const resourceUrl = new URL("/api/", origin);
+  const resourceUrl = new URL("/api", origin);
   const challenge = await requestResponse(transport, {
     url: resourceUrl.href,
     method: "GET",

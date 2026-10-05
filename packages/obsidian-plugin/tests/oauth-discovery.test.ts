@@ -4,8 +4,8 @@ import { discoverAuthorizationServer } from "../src/infra/auth/oauth-discovery";
 import type { HttpRequest, HttpResponse, Transport } from "../src/infra/http/transport";
 
 const origin = "https://sync.example.com";
-const resource = `${origin}/api/`;
-const resourceMetadataUrl = `${origin}/.well-known/cloudflare-access-protected-resource/api/`;
+const resource = `${origin}/api`;
+const resourceMetadataUrl = `${origin}/.well-known/cloudflare-access-protected-resource/api`;
 const issuer = "https://team.cloudflareaccess.com";
 const metadataUrl = `${issuer}/.well-known/oauth-authorization-server`;
 const metadata = {
