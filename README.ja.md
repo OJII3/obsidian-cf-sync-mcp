@@ -43,7 +43,7 @@ https://github.com/user-attachments/assets/b756b66e-3c62-4bcb-9710-f038a03f7667
 pnpm --filter @cf-sync/worker exec wrangler login
 pnpm --filter @cf-sync/worker exec wrangler secret put ACCESS_TEAM_DOMAIN
 pnpm --filter @cf-sync/worker exec wrangler secret put ACCESS_AUD
-pnpm deploy
+pnpm run deploy
 ```
 
 ## プラグインの導入

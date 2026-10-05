@@ -43,7 +43,7 @@ Clone this repository and install dependencies with `pnpm install --frozen-lockf
 pnpm --filter @cf-sync/worker exec wrangler login
 pnpm --filter @cf-sync/worker exec wrangler secret put ACCESS_TEAM_DOMAIN
 pnpm --filter @cf-sync/worker exec wrangler secret put ACCESS_AUD
-pnpm deploy
+pnpm run deploy
 ```
 
 ## Plugin installation
