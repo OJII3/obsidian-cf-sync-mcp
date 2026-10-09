@@ -33,11 +33,13 @@ export function createVaultCommand(context: CliContext) {
     async run({ args }) {
       const { vaults } = await listVaults(args.server, context.env);
       const vault = vaults.find((item) => item.id === args.id);
-      if (!vault) {
-        throw new Error(`Vault not found: ${args.id}`);
+      if (!vault && !args.yes) {
+        throw new Error(
+          `Vault not found in the list. If a previous deletion failed, retry with --yes: ${args.id}`,
+        );
       }
 
-      if (!args.yes) {
+      if (vault && !args.yes) {
         if (args.json || !process.stdin.isTTY) {
           throw new Error("Deletion requires confirmation; pass --yes to confirm");
         }
@@ -55,12 +57,13 @@ export function createVaultCommand(context: CliContext) {
         }
       }
 
-      const result = await deleteVault(args.server, context.env, args.id, vault.name);
+      const result = await deleteVault(args.server, context.env, args.id, vault?.name);
+      const name = result.name ?? args.id;
       writeOutput(
         context,
         args.json,
-        { deleted: true, id: result.vault.id, name: result.vault.name },
-        `Deleted Vault ${result.vault.name} (${result.vault.id})`,
+        { deleted: true, id: result.id, name: result.name ?? null },
+        `Deleted Vault ${name} (${result.id})`,
       );
     },
   });

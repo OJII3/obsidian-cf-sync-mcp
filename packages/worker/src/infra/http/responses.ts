@@ -24,7 +24,12 @@ export function errorResponse(error: unknown): Response {
     return Response.json({ error: error.message }, { status: 400 });
   }
 
-  console.error(error);
+  console.error({
+    event: "http.request.failed",
+    errorName: error instanceof Error ? error.name : "UnknownError",
+    errorMessage: error instanceof Error ? error.message : String(error),
+    errorStack: error instanceof Error ? error.stack : undefined,
+  });
 
   return Response.json({ error: "Internal server error" }, { status: 500 });
 }

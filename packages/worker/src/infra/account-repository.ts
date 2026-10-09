@@ -83,10 +83,13 @@ export class AccountRepository {
     await this.storage.transaction(async (tx) => {
       const existing = await tx.get<VaultInfo>(`vault:${id}`);
       const deleting = await tx.get(`vault-deleting:${id}`);
-      if (!existing && !deleting) {
+      const deleted = await tx.get(`vault-deleted:${id}`);
+      if (!existing && !deleting && !deleted) {
         throw new ApplicationError("not-found", "Unknown vault");
       }
-      await tx.put(`vault-deleting:${id}`, true);
+      if (!deleted) {
+        await tx.put(`vault-deleting:${id}`, true);
+      }
     });
   }
 

@@ -71,7 +71,7 @@ obsidian-cf-sync sync ./vault
 obsidian-cf-sync vault delete REMOTE_VAULT_ID --server https://sync.example.com
 ```
 
-`vault delete`はVault名の入力確認を求めます。非対話で実行する場合は`--yes`を指定してください。削除すると、リモートの同期データと添付ファイルを完全に削除します。環境変数によるサービストークン認証も引き続き使えます。
+`vault delete`はVault名の入力確認を求めます。非対話で実行する場合は`--yes`を指定してください。前回の削除が失敗してVaultが一覧に出なくなった場合も、`--yes`を付けるとIDで削除を再試行できます。削除すると、リモートの同期データと添付ファイルを完全に削除します。環境変数によるサービストークン認証も引き続き使えます。
 
 その他の使い方は`obsidian-cf-sync --help`を参照してください。
 

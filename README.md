@@ -71,7 +71,7 @@ obsidian-cf-sync sync ./vault
 obsidian-cf-sync vault delete REMOTE_VAULT_ID --server https://sync.example.com
 ```
 
-`vault delete` asks you to type the Vault name. Use `--yes` for non-interactive deletion. It permanently removes the remote sync data and attachments. Service Token authentication through environment variables remains available.
+`vault delete` asks you to type the Vault name. Use `--yes` for non-interactive deletion. If a previous deletion failed and the Vault no longer appears in the list, `--yes` retries deletion by ID. It permanently removes the remote sync data and attachments. Service Token authentication through environment variables remains available.
 
 See `obsidian-cf-sync --help` for more options.
 
