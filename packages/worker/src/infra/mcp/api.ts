@@ -1,38 +1,57 @@
-import { documentSchema, snapshotSchema, type FileRecord, type Snapshot } from "@cf-sync/protocol";
+import {
+  documentSchema,
+  snapshotSchema,
+  type FileRecord,
+  type Snapshot,
+  type VaultInfo,
+} from "@cf-sync/protocol";
 import { toUint8Array } from "js-base64";
 import * as v from "valibot";
 import * as Y from "yjs";
 
-export interface ReadonlyVaultApiConfig {
-  binding: {
-    serverUrl: string;
-    vaultId: string;
-    deviceId: string;
-  };
-  credentials: {
-    clientId: string;
-    clientSecret: string;
-  };
-}
+import type { Account } from "../durable-objects/account";
+import type { Vault } from "../durable-objects/vault";
+import { unwrapRpcResult } from "../rpc-result";
+
+const MCP_DEVICE_ID = "00000000-0000-4000-8000-000000000001";
 
 export class ReadonlyVaultApi {
-  constructor(private readonly config: ReadonlyVaultApiConfig) {}
+  constructor(
+    private readonly account: DurableObjectStub<Account>,
+    private readonly vaults: DurableObjectNamespace<Vault>,
+  ) {}
 
-  async listFiles(): Promise<FileRecord[]> {
-    const response = await this.get(
-      `/api/vaults/${encodeURIComponent(this.config.binding.vaultId)}/snapshot`,
-    );
-    const snapshot = v.parse(snapshotSchema, await response.json()) satisfies Snapshot;
+  async listVaults(): Promise<VaultInfo[]> {
+    return unwrapRpcResult(await this.account.vaults());
+  }
 
+  async resolveVaultId(vaultId?: string): Promise<string> {
+    if (vaultId) {
+      unwrapRpcResult(await this.account.vault(vaultId));
+      return vaultId;
+    }
+    const vaults = await this.listVaults();
+    if (vaults.length === 1) {
+      return vaults[0]!.id;
+    }
+    if (vaults.length === 0) {
+      throw new Error("No remote Vaults are registered yet");
+    }
+    throw new Error("Choose a Vault by ID. Use the list_vaults tool to see available Vaults.");
+  }
+
+  async listFiles(vaultId: string): Promise<FileRecord[]> {
+    await this.authorizeVault(vaultId);
+    const snapshot = await this.readSnapshot(vaultId);
     return snapshot.files;
   }
 
-  async readText(fileId: string): Promise<string> {
-    const response = await this.get(
-      `/api/vaults/${encodeURIComponent(this.config.binding.vaultId)}/files/${encodeURIComponent(fileId)}`,
+  async readText(vaultId: string, fileId: string): Promise<string> {
+    await this.authorizeVault(vaultId);
+    const stream = unwrapRpcResult(
+      await this.vaults.getByName(vaultId).document(vaultId, MCP_DEVICE_ID, fileId),
     );
-    const document = v.parse(documentSchema, await response.json());
-
+    const document = v.parse(documentSchema, await new Response(stream).json());
     if (document.content.kind !== "text") {
       throw new Error("The requested file is an attachment, not a text note");
     }
@@ -46,21 +65,16 @@ export class ReadonlyVaultApi {
     }
   }
 
-  private async get(path: string): Promise<Response> {
-    const response = await fetch(new URL(path, this.config.binding.serverUrl), {
-      headers: {
-        "CF-Access-Client-Id": this.config.credentials.clientId,
-        "CF-Access-Client-Secret": this.config.credentials.clientSecret,
-        "X-Device-Id": this.config.binding.deviceId,
-      },
-      redirect: "error",
-      signal: AbortSignal.timeout(60_000),
-    });
+  private async readSnapshot(vaultId: string): Promise<Snapshot> {
+    const stream = unwrapRpcResult(
+      await this.vaults.getByName(vaultId).snapshot(vaultId, MCP_DEVICE_ID),
+    );
+    return v.parse(snapshotSchema, await new Response(stream).json());
+  }
 
-    if (!response.ok) {
-      throw new Error(`CF Sync API request failed: HTTP ${response.status}`);
-    }
-
-    return response;
+  private async authorizeVault(vaultId: string): Promise<void> {
+    unwrapRpcResult(await this.account.vault(vaultId));
+    unwrapRpcResult(await this.account.registerDevice({ id: MCP_DEVICE_ID, name: "Remote MCP" }));
+    unwrapRpcResult(await this.account.device(MCP_DEVICE_ID));
   }
 }

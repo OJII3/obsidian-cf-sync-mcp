@@ -78,29 +78,11 @@ See `obsidian-cf-sync --help` for more options.
 
 The Worker can expose a remote MCP endpoint at `https://<hostname>/mcp`. MCP clients sign in through Cloudflare Access and authorize read-only note access with OAuth, so the client does not need a Service Token in its environment. The MCP server exposes note listing, note reading, and content search only.
 
-1. Register a dedicated device for the MCP server. The directory does not need to be synced, but initialization registers the device.
+1. Deploy the Worker. MCP uses the existing Account and Vault Durable Objects directly and stores OAuth data in the Account Durable Object. It registers its own device on first access, so no Vault ID, device ID, KV namespace ID, or Service Token needs to be configured.
+2. In the Cloudflare Access self-hosted application, protect `/authorize` and configure a user policy. Leave `/mcp`, `/oauth/*`, and OAuth metadata public so MCP clients can reach them. Existing Access rules for the sync API can stay as they are.
+3. Register `https://<hostname>/mcp` in the MCP client. If there is one Vault, MCP uses it automatically. With multiple Vaults, call `list_vaults` and pass the selected ID as `vaultId` to the note tools.
 
-   ```sh
-   obsidian-cf-sync init ./mcp-device --server https://<hostname> --vault <remote-vault-id>
-   ```
-
-2. Edit `packages/worker/wrangler.toml`. Set `MCP_PUBLIC_URL` to the Worker origin, and set `MCP_VAULT_ID` and `MCP_DEVICE_ID` from `./mcp-device/.cf-sync/vault.json`.
-3. In the Cloudflare Access self-hosted application, protect `/api/*` and `/authorize`. Configure both the user login policy and Service Auth policy, and allow the logged-in users through `/authorize`. Leave `/mcp`, `/oauth/*`, and OAuth metadata public so MCP clients can reach them.
-4. Create a KV namespace for OAuth and set its ID in the `OAUTH_KV` binding in `wrangler.toml`.
-
-   ```sh
-   pnpm --filter @cf-sync/worker exec wrangler kv namespace create OAUTH_KV
-   ```
-
-5. Set the Cloudflare Access Service Token used for the Worker’s internal sync API requests as Worker secrets, then deploy.
-
-   ```sh
-   pnpm --filter @cf-sync/worker exec wrangler secret put CF_ACCESS_CLIENT_ID
-   pnpm --filter @cf-sync/worker exec wrangler secret put CF_ACCESS_CLIENT_SECRET
-   pnpm deploy
-   ```
-
-Register `https://<hostname>/mcp` in the MCP client. The first connection opens a browser for Access sign-in and approval to read notes. The Worker validates the Cloudflare Access JWT signature, issuer, and audience; the MCP server manages OAuth tokens.
+The first connection opens a browser for Access sign-in and approval to read notes. The Worker validates the Cloudflare Access JWT signature, issuer, and audience; the MCP server manages its OAuth tokens.
 
 ## Requirements and costs
 

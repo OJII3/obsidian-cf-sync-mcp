@@ -15,20 +15,7 @@ export function handleMcpRequest(
     return Promise.resolve(insufficientScope(ctx.auth, [requiredScope]));
   }
 
-  const serverUrl = new URL(env.MCP_PUBLIC_URL).origin;
-  const handler = createMcpHandler(() =>
-    createServer({
-      binding: {
-        serverUrl,
-        vaultId: env.MCP_VAULT_ID,
-        deviceId: env.MCP_DEVICE_ID,
-      },
-      credentials: {
-        clientId: env.CF_ACCESS_CLIENT_ID,
-        clientSecret: env.CF_ACCESS_CLIENT_SECRET,
-      },
-    }),
-  );
+  const handler = createMcpHandler(() => createServer(env.ACCOUNT.getByName("owner"), env.VAULTS));
 
   return handler.fetch(request);
 }

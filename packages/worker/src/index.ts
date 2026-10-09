@@ -9,6 +9,7 @@ import { handleMcpAuthorization } from "./infra/http/mcp-authorization";
 import { oauthCallback } from "./infra/http/oauth-callback";
 import { notFound, onError } from "./infra/http/responses";
 import { routeWebSocket } from "./infra/http/websocket-route";
+import { OAuthStorage } from "./infra/oauth-storage";
 
 export { Account as AccountDO } from "./infra/durable-objects/account";
 export { Vault as VaultDO } from "./infra/durable-objects/vault";
@@ -34,17 +35,7 @@ const defaultHandler = {
 
 export default {
   fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    const publicUrl = new URL(env.MCP_PUBLIC_URL);
-    if (
-      publicUrl.pathname !== "/" ||
-      publicUrl.search ||
-      publicUrl.hash ||
-      publicUrl.username ||
-      publicUrl.password
-    ) {
-      throw new Error("MCP_PUBLIC_URL must contain only the server origin");
-    }
-    const issuer = publicUrl.origin;
+    const issuer = new URL(request.url).origin;
     const provider = new OAuthProvider<Env>({
       apiRoute: "/mcp",
       apiHandler: {
@@ -64,6 +55,10 @@ export default {
       },
     });
 
-    return provider.fetch(request, env, ctx);
+    const oauthEnv = {
+      ...env,
+      OAUTH_KV: new OAuthStorage(env.ACCOUNT.getByName("owner")),
+    } as Env;
+    return provider.fetch(request, oauthEnv, ctx);
   },
 };
