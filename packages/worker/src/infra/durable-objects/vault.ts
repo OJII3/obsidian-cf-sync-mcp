@@ -166,17 +166,34 @@ export class Vault extends DurableObject<Env> {
 
   deleteVault(vaultId: string): Promise<void> {
     return this.serial(async () => {
-      const meta = await this.state.storage.get<VaultMeta>("meta");
-      if (meta && meta.vaultId !== vaultId) {
-        throw new ApplicationError("forbidden", "Vault mismatch");
+      let stage = "verify-vault";
+      try {
+        const meta = await this.state.storage.get<VaultMeta>("meta");
+        if (meta && meta.vaultId !== vaultId) {
+          throw new ApplicationError("forbidden", "Vault mismatch");
+        }
+        stage = "close-connections";
+        await this.state.storage.put("deleting", true);
+        this.sockets.closeAll();
+        await this.state.storage.deleteAlarm();
+        stage = "delete-r2-archive";
+        await this.deleteObjects(`vaults/${vaultId}/`);
+        stage = "delete-r2-staging";
+        await this.deleteObjects(`staging/${vaultId}/`);
+        stage = "delete-durable-object-state";
+        await this.state.storage.deleteAll();
+        await this.state.storage.put("deleted", true);
+      } catch (error) {
+        console.error({
+          event: "vault.deletion.failed",
+          vaultId,
+          stage,
+          errorName: error instanceof Error ? error.name : "UnknownError",
+          errorMessage: error instanceof Error ? error.message : String(error),
+          errorStack: error instanceof Error ? error.stack : undefined,
+        });
+        throw error;
       }
-      await this.state.storage.put("deleting", true);
-      this.sockets.closeAll();
-      await this.state.storage.deleteAlarm();
-      await this.deleteObjects(`vaults/${vaultId}/`);
-      await this.deleteObjects(`staging/${vaultId}/`);
-      await this.state.storage.deleteAll();
-      await this.state.storage.put("deleted", true);
     });
   }
 

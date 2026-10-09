@@ -56,7 +56,18 @@ export class RestApi implements RestApiPort {
         throw new DocumentNotFoundError("Remote document no longer exists");
       }
 
-      throw new Error(`API request failed: HTTP ${response.status}`);
+      const body = await response.text();
+      let detail = body.trim().slice(0, 500);
+      try {
+        const parsed = JSON.parse(body) as { error?: unknown };
+        if (typeof parsed.error === "string") {
+          detail = parsed.error;
+        }
+      } catch {
+        // Keep the response text when it is not JSON.
+      }
+      const suffix = detail ? `: ${detail}` : "";
+      throw new Error(`API request failed: HTTP ${response.status}${suffix}`);
     }
 
     return response;
