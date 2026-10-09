@@ -59,18 +59,19 @@ Each local vault connects to one remote vault. To use a different remote vault, 
 
 ## CLI
 
-Sync a Vault without Obsidian on macOS or Linux with Node.js 24 or later. Create an Access [service token](https://developers.cloudflare.com/cloudflare-one/access-controls/service-credentials/service-tokens/) and allow it with a **Service Auth** policy.
+Sync and manage Vaults without Obsidian on macOS or Linux with Node.js 24 or later. Install [`cloudflared`](https://developers.cloudflare.com/cloudflare-one/tutorials/cli/) and allow user login in your Access policy.
 
 ```sh
 npm install -g obsidian-cf-sync
-export CF_SYNC_SERVER_URL=https://sync.example.com
-export CF_ACCESS_CLIENT_ID='your-client-id'
-export CF_ACCESS_CLIENT_SECRET='your-client-secret'
 
-obsidian-cf-sync vault list
-obsidian-cf-sync init ./vault --vault REMOTE_VAULT_ID
+obsidian-cf-sync auth login --server https://sync.example.com
+obsidian-cf-sync vault list --server https://sync.example.com
+obsidian-cf-sync init ./vault --server https://sync.example.com --vault REMOTE_VAULT_ID
 obsidian-cf-sync sync ./vault
+obsidian-cf-sync vault delete REMOTE_VAULT_ID --server https://sync.example.com
 ```
+
+`vault delete` asks you to type the Vault name. Use `--yes` for non-interactive deletion. It permanently removes the remote sync data and attachments. Service Token authentication through environment variables remains available.
 
 See `obsidian-cf-sync --help` for more options.
 

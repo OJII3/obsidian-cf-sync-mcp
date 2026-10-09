@@ -35,6 +35,13 @@ export class VaultSockets {
     }
   }
 
+  closeAll(): void {
+    for (const ws of this.state.getWebSockets()) {
+      this.leave(ws);
+      ws.close(4004, "Vault deleted");
+    }
+  }
+
   async issueTicket(deviceId: string): Promise<{ ticket: string; expiresAt: number }> {
     const secret = crypto.randomUUID() + crypto.randomUUID();
     const expiresAt = Date.now() + 30_000;

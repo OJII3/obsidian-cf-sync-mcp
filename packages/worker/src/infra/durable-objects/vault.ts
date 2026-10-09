@@ -143,9 +143,18 @@ export class Vault extends DurableObject<Env> {
       );
       const blobs = new BlobStorage(this.env.BUCKET, vaultId);
       const blob = await blobs.upload(key, digest, body, sizeHeader);
-      unwrapRpcResult(
-        await this.execute(vaultId, deviceId, async () => this.maintenance.request("blobs")),
-      );
+      try {
+        unwrapRpcResult(
+          await this.execute(vaultId, deviceId, async () => this.maintenance.request("blobs")),
+        );
+      } catch (error) {
+        const deleting = await this.state.storage.get("deleting");
+        const deleted = await this.state.storage.get("deleted");
+        if (deleting || deleted) {
+          await blobs.delete(key);
+        }
+        throw error;
+      }
 
       return blob;
     });
@@ -153,6 +162,22 @@ export class Vault extends DurableObject<Env> {
 
   revokeDevice(deviceId: string): Promise<RpcResult<void>> {
     return this.serial(() => rpcResult(() => this.sockets.revoke(deviceId)));
+  }
+
+  deleteVault(vaultId: string): Promise<void> {
+    return this.serial(async () => {
+      const meta = await this.state.storage.get<VaultMeta>("meta");
+      if (meta && meta.vaultId !== vaultId) {
+        throw new ApplicationError("forbidden", "Vault mismatch");
+      }
+      await this.state.storage.put("deleting", true);
+      this.sockets.closeAll();
+      await this.state.storage.deleteAlarm();
+      await this.deleteObjects(`vaults/${vaultId}/`);
+      await this.deleteObjects(`staging/${vaultId}/`);
+      await this.state.storage.deleteAll();
+      await this.state.storage.put("deleted", true);
+    });
   }
 
   override async fetch(request: Request): Promise<Response> {
@@ -263,6 +288,21 @@ export class Vault extends DurableObject<Env> {
     const files = stored.map((item) => item.file);
 
     return jsonStream({ ...meta, files });
+  }
+
+  private async deleteObjects(prefix: string): Promise<void> {
+    let cursor: string | undefined;
+    do {
+      const options: R2ListOptions = { prefix, limit: 1000 };
+      if (cursor) {
+        options.cursor = cursor;
+      }
+      const page = await this.env.BUCKET.list(options);
+      if (page.objects.length > 0) {
+        await this.env.BUCKET.delete(page.objects.map((object) => object.key));
+      }
+      cursor = page.truncated ? page.cursor : undefined;
+    } while (cursor);
   }
 
   private serial<T>(action: () => Promise<T>): Promise<T> {
