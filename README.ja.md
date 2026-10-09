@@ -29,7 +29,7 @@ https://github.com/user-attachments/assets/b756b66e-3c62-4bcb-9710-f038a03f7667
 
 1. CloudflareでR2を有効にし、`packages/worker/wrangler.toml`の`bucket_name`を自分のバケット名へ変更します。新規作成には`pnpm --filter @cf-sync/worker exec wrangler r2 bucket create <バケット名>`を使います。
 2. 自分のHTTPSホスト名をWorkerのカスタムドメインへ割り当てます。プラグインにはパスを含まないこのオリジンを設定します。
-3. Accessのself-hosted applicationで同期APIの`/api/*`を保護し、自分のメールアドレスだけを許可します。Managed OAuthを有効にします。
+3. Accessで`/api/*`と`/authorize`を保護し、自分のメールアドレスだけを許可するAllowポリシーを設定します。Managed OAuthを有効にします。
 4. OAuthの許可リダイレクトURIを`https://<ホスト名>/oauth/callback`に設定します。
 5. アクセストークンの寿命は15分、Grant sessionは30日を希望値として設定します。
 6. 以下のWorker環境変数を設定します。ローカル開発では同名の値を`packages/worker/.dev.vars`に記載します。
@@ -74,38 +74,14 @@ obsidian-cf-sync sync ./vault
 
 その他の使い方は`obsidian-cf-sync --help`を参照してください。
 
-## MCPサーバー
+## リモートMCPサーバー
 
-AIエージェントから既存Vaultのノートを読む場合は、別パッケージ`obsidian-cf-sync-mcp`を使います。同期APIから直接読み取り、MCPにはノート一覧・本文取得・本文検索だけを公開します。同期操作や更新操作は公開しません。
+Workerをデプロイすると、AIエージェントから`https://<ホスト名>/mcp`へ接続できます。Cloudflare Accessでログインし、ノート読み取り権限をOAuthで許可します。MCPに公開するのはノート一覧・本文取得・本文検索だけです。
 
-```sh
-npm install -g obsidian-cf-sync-mcp
-```
+1. MCPクライアントに`https://<ホスト名>/mcp`を登録します。`/mcp`、`/oauth/*`、OAuthメタデータがMCPクライアントから到達できることを確認します。
+2. Vaultが1つならそのVaultを使い、複数ある場合は`list_vaults`で確認したIDを各ノートツールの`vaultId`に指定します。
 
-まずCLIで接続用ディレクトリを初期化します。ローカルへ同期する必要はありません。
-
-```sh
-obsidian-cf-sync init ./agent-connection --vault <リモートVault ID>
-```
-
-MCPクライアントの設定例です。`CF_SYNC_VAULT_DIR`は初期化したディレクトリ、AccessのService Tokenは環境変数として渡します。
-
-```json
-{
-  "mcpServers": {
-    "obsidian-cf-sync": {
-      "command": "obsidian-cf-sync-mcp",
-      "env": {
-        "CF_SYNC_VAULT_DIR": "/path/to/agent-connection",
-        "CF_ACCESS_CLIENT_ID": "your-client-id",
-        "CF_ACCESS_CLIENT_SECRET": "your-client-secret"
-      }
-    }
-  }
-}
-```
-
-エージェントに公開するのは読み取りツールだけですが、認証にはCLIと同じCloudflare Access Service Tokenを使います。トークン自体はMCPクライアントの環境変数に設定し、会話やノート本文へ貼り付けないでください。
+初回接続時にブラウザが開き、Accessログインとノート読み取り許可を求めます。認可はCloudflare AccessのJWT署名・Issuer・AudienceをWorkerが検証して行います。OAuthトークンはMCPサーバーが管理します。
 
 ## 利用要件と料金
 

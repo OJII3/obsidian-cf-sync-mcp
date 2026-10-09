@@ -1,6 +1,7 @@
 name = "obsidian-cf-sync"
 main = "src/index.ts"
 compatibility_date = "2026-09-09"
+compatibility_flags = ["global_fetch_strictly_public"]
 
 [[durable_objects.bindings]]
 name = "ACCOUNT"

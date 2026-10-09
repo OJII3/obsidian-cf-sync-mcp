@@ -213,43 +213,6 @@ importers:
         specifier: 'catalog:'
         version: 1.5.0(typescript@7.0.2)
 
-  packages/mcp:
-    dependencies:
-      '@cf-sync/protocol':
-        specifier: workspace:*
-        version: link:../protocol
-      '@modelcontextprotocol/server':
-        specifier: 2.3.1
-        version: 2.3.1
-      js-base64:
-        specifier: 3.9.3
-        version: 3.9.3
-      valibot:
-        specifier: 'catalog:'
-        version: 1.5.0(typescript@7.0.2)
-      yjs:
-        specifier: 'catalog:'
-        version: 13.6.32
-      zod:
-        specifier: 4.6.5
-        version: 4.6.5
-    devDependencies:
-      '@tsconfig/node-lts':
-        specifier: 24.0.1
-        version: 24.0.1
-      '@tsconfig/strictest':
-        specifier: 2.0.8
-        version: 2.0.8
-      '@types/node':
-        specifier: ^24.13.3
-        version: 24.13.3
-      tsdown:
-        specifier: 0.23.0
-        version: 0.23.0(tsx@4.23.13)(typescript@7.0.2)
-      typescript:
-        specifier: 7.0.2
-        version: 7.0.2
-
   packages/obsidian-plugin:
     dependencies:
       '@cf-sync/protocol':
@@ -353,6 +316,12 @@ importers:
       '@cf-sync/protocol':
         specifier: workspace:*
         version: link:../protocol
+      '@cloudflare/workers-oauth-provider':
+        specifier: 1.2.3
+        version: 1.2.3
+      '@modelcontextprotocol/server':
+        specifier: 2.3.1
+        version: 2.3.1
       hono:
         specifier: 'catalog:'
         version: 4.13.7
@@ -371,6 +340,9 @@ importers:
       yjs:
         specifier: 'catalog:'
         version: 13.6.32
+      zod:
+        specifier: 4.6.5
+        version: 4.6.5
     devDependencies:
       '@cloudflare/workers-types':
         specifier: 'catalog:'
@@ -453,6 +425,9 @@ packages:
     engines: {node: '>=16'}
     cpu: [x64]
     os: [win32]
+
+  '@cloudflare/workers-oauth-provider@1.2.3':
+    resolution: {integrity: sha512-40eGeA3DnTOEl2ijHYY5Z9yNIf0fdjgomoaA6GHPo4FyKQw0oXPuy4GVjTE/uNfS/MoFAvzsuVBRwTPKUki4hA==}
 
   '@cloudflare/workers-types@5.20260908.1':
     resolution: {integrity: sha512-cILmYEd/YtL+Hlwytc5n+QVV8F+E5doQOtc6QiBtPb51kK+5fkk909db+G8dxeUsMd2ytJgdpAt/lyciUEobcw==}
@@ -2176,6 +2151,8 @@ snapshots:
 
   '@cloudflare/workerd-windows-64@1.20260907.1':
     optional: true
+
+  '@cloudflare/workers-oauth-provider@1.2.3': {}
 
   '@cloudflare/workers-types@5.20260908.1': {}
 

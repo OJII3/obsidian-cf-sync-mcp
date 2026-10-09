@@ -1,5 +1,5 @@
 {
-  description = "Development shell for obsidian-cf-sync-mcp";
+  description = "Development shell for CF Sync";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 

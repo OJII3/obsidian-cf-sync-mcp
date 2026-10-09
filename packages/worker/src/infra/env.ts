@@ -5,6 +5,8 @@ export interface Env {
   ACCOUNT: DurableObjectNamespace<Account>;
   VAULTS: DurableObjectNamespace<Vault>;
   BUCKET: R2Bucket;
+  OAUTH_PROVIDER: OAuthHelpers;
   ACCESS_TEAM_DOMAIN: string;
   ACCESS_AUD: string;
 }
+import type { OAuthHelpers } from "@cloudflare/workers-oauth-provider";

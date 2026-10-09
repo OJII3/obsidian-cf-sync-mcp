@@ -11,7 +11,7 @@
     "build:cli": "pnpm --filter obsidian-cf-sync build",
     "build:plugin": "pnpm --filter @cf-sync/obsidian-plugin build",
     "build:worker": "pnpm --filter @cf-sync/worker build",
-    "deploy": "pnpm --filter @cf-sync/worker deploy",
+    "deploy": "pnpm --filter @cf-sync/worker run deploy",
     "dev:worker": "pnpm --filter @cf-sync/worker dev",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
