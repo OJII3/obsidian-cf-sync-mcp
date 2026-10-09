@@ -91,7 +91,7 @@ describe("MCP authorization", () => {
   ])("permits the validated callback origin in the form redirect policy: %s", async (uri) => {
     const { consent } = await setup(uri);
     expect(consent.headers.get("Content-Security-Policy")).toBe(
-      `default-src 'none'; form-action 'self' ${new URL(uri).origin}; base-uri 'none'; frame-ancestors 'none'`,
+      `default-src 'none'; style-src 'unsafe-inline'; form-action 'self' ${new URL(uri).origin}; base-uri 'none'; frame-ancestors 'none'`,
     );
   });
 
