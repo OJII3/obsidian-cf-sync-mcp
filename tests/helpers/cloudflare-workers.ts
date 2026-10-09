@@ -1,3 +1,5 @@
+export class WorkerEntrypoint {}
+
 export class DurableObject<Env> {
   constructor(
     protected readonly ctx: DurableObjectState,

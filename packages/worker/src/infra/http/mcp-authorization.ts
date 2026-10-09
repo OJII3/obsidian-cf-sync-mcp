@@ -14,10 +14,10 @@ export async function handleMcpAuthorization(request: Request, env: Env): Promis
   try {
     const userId = await getAuthenticatedUserId(request, env);
     if (request.method === "GET") {
-      return showConsent(request, env);
+      return await showConsent(request, env);
     }
     if (request.method === "POST") {
-      return submitConsent(request, env, userId);
+      return await submitConsent(request, env, userId);
     }
 
     return new Response("Method not allowed", { status: 405, headers: { Allow: "GET, POST" } });
@@ -50,10 +50,12 @@ async function showConsent(request: Request, env: Env): Promise<Response> {
   const authRequest = await oauth.parseAuthRequest(request);
   const details = await oauth.describeConsent(authRequest);
   const consent = await oauth.beginConsent(authRequest);
+  const redirectOrigin = new URL(details.redirectUri).origin;
   consent.headers.set("Content-Type", "text/html; charset=utf-8");
+  // Chromium also checks form-action on the redirect after a form POST.
   consent.headers.set(
     "Content-Security-Policy",
-    "default-src 'none'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
+    `default-src 'none'; form-action 'self' ${redirectOrigin}; base-uri 'none'; frame-ancestors 'none'`,
   );
   consent.headers.set("Cache-Control", "no-store");
   return new Response(renderConsentPage(details, consent.handle), { headers: consent.headers });

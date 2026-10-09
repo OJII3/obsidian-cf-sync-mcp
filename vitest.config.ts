@@ -7,5 +7,9 @@ export default defineConfig({
         .pathname,
     },
   },
-  test: { include: ["tests/**/*.test.ts", "packages/*/tests/**/*.test.ts"], environment: "node" },
+  test: {
+    include: ["tests/**/*.test.ts", "packages/*/tests/**/*.test.ts"],
+    environment: "node",
+    server: { deps: { inline: ["@cloudflare/workers-oauth-provider"] } },
+  },
 });
