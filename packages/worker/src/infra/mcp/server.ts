@@ -1,11 +1,10 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 
-import { ReadonlyVaultApi } from "./api";
-import type { McpConfig } from "./config";
+import { ReadonlyVaultApi, type ReadonlyVaultApiConfig } from "./api";
 
-export function createServer(config: McpConfig): McpServer {
-  const server = new McpServer({ name: "obsidian-cf-sync-mcp", version: "0.1.0" });
+export function createServer(config: ReadonlyVaultApiConfig): McpServer {
+  const server = new McpServer({ name: "obsidian-cf-sync", version: "0.3.1" });
   const api = new ReadonlyVaultApi(config);
 
   registerListNotes(server, api);

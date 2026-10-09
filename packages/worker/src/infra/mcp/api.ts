@@ -3,10 +3,20 @@ import { toUint8Array } from "js-base64";
 import * as v from "valibot";
 import * as Y from "yjs";
 
-import type { McpConfig } from "./config";
+export interface ReadonlyVaultApiConfig {
+  binding: {
+    serverUrl: string;
+    vaultId: string;
+    deviceId: string;
+  };
+  credentials: {
+    clientId: string;
+    clientSecret: string;
+  };
+}
 
 export class ReadonlyVaultApi {
-  constructor(private readonly config: McpConfig) {}
+  constructor(private readonly config: ReadonlyVaultApiConfig) {}
 
   async listFiles(): Promise<FileRecord[]> {
     const response = await this.get(

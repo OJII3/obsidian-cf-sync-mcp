@@ -1,8 +1,8 @@
 import { insufficientScope, type OAuthResourceContext } from "@cloudflare/workers-oauth-provider";
 import { createMcpHandler } from "@modelcontextprotocol/server";
 
-import { createServer } from "../../../../mcp/src/server";
 import type { Env } from "../env";
+import { createServer } from "../mcp/server";
 
 const requiredScope = "notes:read";
 
