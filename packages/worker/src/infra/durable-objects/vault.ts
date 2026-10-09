@@ -23,6 +23,7 @@ import { VaultSockets } from "../vault-sockets";
 
 export class Vault extends DurableObject<Env> {
   private tail: Promise<unknown> = Promise.resolve();
+  private readonly stateStorage: DurableObjectStorage;
   private readonly repository: VaultRepository;
   private readonly sockets: VaultSockets;
   private readonly flush: FlushVault;
@@ -31,6 +32,7 @@ export class Vault extends DurableObject<Env> {
   constructor(state: DurableObjectState, env: Env) {
     super(state, env);
 
+    this.stateStorage = state.storage;
     this.repository = new VaultRepository(state.storage);
     this.sockets = new VaultSockets(state);
     this.maintenance = new VaultMaintenance(state.storage);
@@ -148,8 +150,8 @@ export class Vault extends DurableObject<Env> {
           await this.execute(vaultId, deviceId, async () => this.maintenance.request("blobs")),
         );
       } catch (error) {
-        const deleting = await this.state.storage.get("deleting");
-        const deleted = await this.state.storage.get("deleted");
+        const deleting = await this.stateStorage.get("deleting");
+        const deleted = await this.stateStorage.get("deleted");
         if (deleting || deleted) {
           await blobs.delete(key);
         }
@@ -168,21 +170,21 @@ export class Vault extends DurableObject<Env> {
     return this.serial(async () => {
       let stage = "verify-vault";
       try {
-        const meta = await this.state.storage.get<VaultMeta>("meta");
+        const meta = await this.stateStorage.get<VaultMeta>("meta");
         if (meta && meta.vaultId !== vaultId) {
           throw new ApplicationError("forbidden", "Vault mismatch");
         }
         stage = "close-connections";
-        await this.state.storage.put("deleting", true);
+        await this.stateStorage.put("deleting", true);
         this.sockets.closeAll();
-        await this.state.storage.deleteAlarm();
+        await this.stateStorage.deleteAlarm();
         stage = "delete-r2-archive";
         await this.deleteObjects(`vaults/${vaultId}/`);
         stage = "delete-r2-staging";
         await this.deleteObjects(`staging/${vaultId}/`);
         stage = "delete-durable-object-state";
-        await this.state.storage.deleteAll();
-        await this.state.storage.put("deleted", true);
+        await this.stateStorage.deleteAll();
+        await this.stateStorage.put("deleted", true);
       } catch (error) {
         console.error({
           event: "vault.deletion.failed",
