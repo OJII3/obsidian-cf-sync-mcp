@@ -61,19 +61,20 @@ async function showConsent(request: Request, env: Env): Promise<Response> {
 
 async function submitConsent(request: Request, env: Env, userId: string): Promise<Response> {
   const oauth = env.OAUTH_PROVIDER;
-  const form = await request.formData();
+  const consentRequest = normalizeCookieHeader(request);
+  const form = await consentRequest.formData();
   const handleField = form.get("handle");
   let handle = "";
   if (typeof handleField === "string") {
     handle = handleField;
   }
   if (form.get("decision") !== "approve") {
-    const denied = await oauth.denyConsent(request, handle);
+    const denied = await oauth.denyConsent(consentRequest, handle);
     denied.headers.set("Cache-Control", "no-store");
     return new Response(null, { status: 302, headers: denied.headers });
   }
 
-  const approved = await oauth.approveConsent(request, handle, {
+  const approved = await oauth.approveConsent(consentRequest, handle, {
     scope: form.getAll("scope").filter((value): value is string => typeof value === "string"),
   });
   const authorization = await oauth.completeAuthorization({
@@ -86,6 +87,18 @@ async function submitConsent(request: Request, env: Env, userId: string): Promis
   approved.headers.set("Location", authorization.redirectTo);
   approved.headers.set("Cache-Control", "no-store");
   return new Response(null, { status: 302, headers: approved.headers });
+}
+
+function normalizeCookieHeader(request: Request): Request {
+  const cookie = request.headers.get("cookie");
+  if (!cookie || !cookie.includes(",")) {
+    return request;
+  }
+
+  // Workers joins duplicate Cookie headers with commas; cookie parsers expect semicolons.
+  const headers = new Headers(request.headers);
+  headers.set("cookie", cookie.replace(/,\s*(?=[!#$%&'*+\-.^_`|~0-9A-Za-z]+=)/g, "; "));
+  return new Request(request, { headers });
 }
 
 function renderConsentPage(details: ConsentDescription, handle: string): string {
