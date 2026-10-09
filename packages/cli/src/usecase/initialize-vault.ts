@@ -2,7 +2,7 @@ import { mkdir, realpath } from "node:fs/promises";
 import { hostname } from "node:os";
 import { resolve } from "node:path";
 
-import { resolveCredentials } from "../infra/config/credentials";
+import { resolveAuth } from "../infra/config/credentials";
 import { resolveServerUrl } from "../infra/config/server-url";
 import { FileVault } from "../infra/fs/vault-adapter";
 import {
@@ -21,9 +21,9 @@ export interface InitializeOptions {
 
 export async function initializeVault(options: InitializeOptions, env: NodeJS.ProcessEnv) {
   const serverUrl = resolveServerUrl(options.server, env);
-  const credentials = await resolveCredentials(serverUrl, env);
+  const auth = await resolveAuth(serverUrl, env);
   const deviceId = crypto.randomUUID();
-  const api = new RestApi(serverUrl, credentials, deviceId, options.vaultId);
+  const api = new RestApi(serverUrl, auth, deviceId, options.vaultId);
   const vaults = await api.vaults();
   const vaultExists = vaults.some((vault) => vault.id === options.vaultId);
 

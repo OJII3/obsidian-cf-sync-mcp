@@ -59,18 +59,19 @@ Obsidianの**設定 → コミュニティプラグイン → 閲覧**から**CF
 
 ## CLI
 
-ObsidianなしでVaultを同期できます（macOS・Linux、Node.js 24以上）。Accessで**Service Auth**を許可した[サービストークン](https://developers.cloudflare.com/cloudflare-one/access-controls/service-credentials/service-tokens/)を用意します。
+ObsidianなしでVaultを同期・管理できます（macOS・Linux、Node.js 24以上）。CLI認証には[`cloudflared`](https://developers.cloudflare.com/cloudflare-one/tutorials/cli/)を使います。Accessでユーザーのログインを許可するポリシーを設定してください。
 
 ```sh
 npm install -g obsidian-cf-sync
-export CF_SYNC_SERVER_URL=https://sync.example.com
-export CF_ACCESS_CLIENT_ID='your-client-id'
-export CF_ACCESS_CLIENT_SECRET='your-client-secret'
 
-obsidian-cf-sync vault list
-obsidian-cf-sync init ./vault --vault REMOTE_VAULT_ID
+obsidian-cf-sync auth login --server https://sync.example.com
+obsidian-cf-sync vault list --server https://sync.example.com
+obsidian-cf-sync init ./vault --server https://sync.example.com --vault REMOTE_VAULT_ID
 obsidian-cf-sync sync ./vault
+obsidian-cf-sync vault delete REMOTE_VAULT_ID --server https://sync.example.com
 ```
+
+`vault delete`はVault名の入力確認を求めます。非対話で実行する場合は`--yes`を指定してください。削除すると、リモートの同期データと添付ファイルを完全に削除します。環境変数によるサービストークン認証も引き続き使えます。
 
 その他の使い方は`obsidian-cf-sync --help`を参照してください。
 

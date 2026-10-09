@@ -58,3 +58,12 @@ accountApiRoutes.post("/vaults", async (c) => {
 
   return c.json(unwrapRpcResult(result));
 });
+
+accountApiRoutes.delete("/vaults/:id", async (c) => {
+  const id = v.parse(idSchema, c.req.param("id"));
+  const account = c.env.ACCOUNT.getByName("owner");
+  const result = await account.deleteVault(id);
+  unwrapRpcResult(result);
+
+  return c.json({ ok: true });
+});

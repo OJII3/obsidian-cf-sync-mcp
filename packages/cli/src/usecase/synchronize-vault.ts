@@ -4,7 +4,7 @@ import { join, resolve } from "node:path";
 import { PlanSync, SyncOnce, type SyncPlan, type SyncResult } from "@cf-sync/sync-core";
 
 import { normalizeServerUrl } from "../domain/connection";
-import { resolveCredentials } from "../infra/config/credentials";
+import { resolveAuth } from "../infra/config/credentials";
 import { FileVault } from "../infra/fs/vault-adapter";
 import { metadataName, readBinding, validateMetadata } from "../infra/fs/vault-binding";
 import { RestApi } from "../infra/http/api-client";
@@ -35,8 +35,8 @@ export async function synchronizeVault(
     const origin = normalizeServerUrl(binding.serverUrl);
     assertSameServer(origin, env["CF_SYNC_SERVER_URL"]);
 
-    const credentials = await resolveCredentials(origin, env);
-    const api = new RestApi(origin, credentials, binding.deviceId, binding.vaultId);
+    const auth = await resolveAuth(origin, env);
+    const api = new RestApi(origin, auth, binding.deviceId, binding.vaultId);
     const store = new SqliteStore(join(metadata, "state.sqlite"), options.dryRun);
 
     try {

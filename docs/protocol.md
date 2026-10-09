@@ -33,6 +33,7 @@ WebSocketはサーバーからの変更通知に使う。編集は250ms単位で
 | `DELETE /api/devices/:id`           | 端末を失効し、各Vaultの接続も閉じる                      |
 | `GET /api/vaults`                   | Vault一覧                                                |
 | `POST /api/vaults`                  | `{id,name}`でVaultを作成                                 |
+| `DELETE /api/vaults/:id`             | VaultのDO状態・R2データを削除                            |
 | `GET /api/vaults/:id/snapshot`      | 全ファイルのメタデータ、除外、保存進捗                   |
 | `GET /api/vaults/:id/files/:fileId` | Yjsの全状態または変更不能な添付参照                      |
 | `POST /api/vaults/:id/operations`   | `Operation`を受け取り、DO保存後に`OperationResult`を返す |

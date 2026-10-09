@@ -27,6 +27,10 @@ export class BlobStorage {
     return object;
   }
 
+  delete(key: string): Promise<void> {
+    return this.bucket.delete(this.key(key));
+  }
+
   async validate(blob: BlobRef): Promise<void> {
     const object = await this.bucket.head(this.key(blob.key));
 

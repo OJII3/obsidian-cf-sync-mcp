@@ -20,6 +20,12 @@ export class VaultRepository {
   }
 
   async initialize(vaultId: string): Promise<VaultMeta> {
+    const deleting = await this.storage.get("deleting");
+    const deleted = await this.storage.get("deleted");
+    if (deleting || deleted) {
+      throw new ApplicationError("not-found", "Vault deleted");
+    }
+
     if (!(await this.storage.get("meta"))) {
       await this.storage.put("meta", {
         revision: 0,

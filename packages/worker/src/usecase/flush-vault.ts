@@ -64,19 +64,20 @@ export class FlushVault {
 
   private async writeFiles(meta: VaultMeta, writes: StoredFile[]): Promise<boolean> {
     for (const stored of writes) {
-      const content = await this.serial(async () => {
+      const written = await this.serial(async () => {
         const current = (await this.repository.files()).find(
           (item) => item.file.id === stored.file.id,
         );
         if (!current || current.file.revision !== stored.file.revision) {
           return null;
         }
-        return this.repository.content(current);
+        const content = await this.repository.content(current);
+        await this.archive.write(meta.vaultId, stored.file.path, content);
+        return true;
       });
-      if (!content) {
+      if (!written) {
         return false;
       }
-      await this.archive.write(meta.vaultId, stored.file.path, content);
     }
     return true;
   }

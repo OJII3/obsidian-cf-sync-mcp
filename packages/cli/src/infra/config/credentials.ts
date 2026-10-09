@@ -1,8 +1,13 @@
+import { execFile as execFileCallback } from "node:child_process";
+import { promisify } from "node:util";
+
 import * as v from "valibot";
 
-import { credentialsSchema, type Credentials } from "../../domain/credentials";
+import { credentialsSchema, type CliAuth, type Credentials } from "../../domain/credentials";
 
 import { readConfig } from "./config-file";
+
+const execFile = promisify(execFileCallback);
 
 export function requireEnvironmentCredentials(env: NodeJS.ProcessEnv): Credentials {
   return v.parse(credentialsSchema, {
@@ -22,14 +27,27 @@ export function readEnvironmentCredentials(env: NodeJS.ProcessEnv): Credentials 
   return requireEnvironmentCredentials(env);
 }
 
-export async function resolveCredentials(
+export async function resolveAuth(
   origin: string,
   env: NodeJS.ProcessEnv,
-): Promise<Credentials> {
+): Promise<CliAuth> {
   const environmentCredentials = readEnvironmentCredentials(env);
 
   if (environmentCredentials) {
-    return environmentCredentials;
+    return { method: "service-token", credentials: environmentCredentials };
+  }
+
+  try {
+    const accessUrl = new URL("/api/vaults", origin).toString();
+    const { stdout } = await execFile("cloudflared", ["access", "token", `-app=${accessUrl}`], {
+      timeout: 10_000,
+    });
+    const token = stdout.trim();
+    if (token) {
+      return { method: "access-token", token };
+    }
+  } catch {
+    // Fall back to a configured Service Token when no cloudflared session is available.
   }
 
   const config = await readConfig(env);
@@ -37,9 +55,9 @@ export async function resolveCredentials(
 
   if (!stored) {
     throw new Error(
-      "Service Token is missing. Set CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET, then run config",
+      `No Cloudflare Access session for ${origin}. Run "obsidian-cf-sync auth login --server ${origin}" or configure a Service Token.`,
     );
   }
 
-  return stored;
+  return { method: "service-token", credentials: stored };
 }

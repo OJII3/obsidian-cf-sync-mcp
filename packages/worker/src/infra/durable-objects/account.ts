@@ -68,6 +68,15 @@ export class Account extends DurableObject<Env> {
     });
   }
 
+  deleteVault(id: string): Promise<RpcResult<void>> {
+    return rpcResult(async () => {
+      await this.repository.beginVaultDeletion(id);
+      await this.env.VAULTS.getByName(id).deleteVault(id);
+      await this.repository.finishVaultDeletion(id);
+      console.info({ event: "vault.deleted", vaultId: id });
+    });
+  }
+
   vault(id: string): Promise<RpcResult<VaultInfo>> {
     return rpcResult(() => this.repository.vault(id));
   }
