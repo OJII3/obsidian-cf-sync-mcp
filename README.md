@@ -76,11 +76,10 @@ See `obsidian-cf-sync --help` for more options.
 
 ## Remote MCP server
 
-The Worker can expose a remote MCP endpoint at `https://<hostname>/mcp`. MCP clients sign in through Cloudflare Access and authorize read-only note access with OAuth, so the client does not need a Service Token in its environment. The MCP server exposes note listing, note reading, and content search only.
+Deploy the Worker to expose a remote MCP endpoint at `https://<hostname>/mcp`. MCP clients sign in through Cloudflare Access and authorize read-only note access with OAuth. The MCP server exposes note listing, note reading, and content search only.
 
-1. Deploy the Worker. MCP uses the existing Account and Vault Durable Objects directly and stores OAuth data in the Account Durable Object. It registers its own device on first access, so no Vault ID, device ID, KV namespace ID, or Service Token needs to be configured.
-2. In the Cloudflare Access self-hosted application, protect `/authorize` and configure a user policy. Leave `/mcp`, `/oauth/*`, and OAuth metadata public so MCP clients can reach them. Existing Access rules for the sync API can stay as they are.
-3. Register `https://<hostname>/mcp` in the MCP client. If there is one Vault, MCP uses it automatically. With multiple Vaults, call `list_vaults` and pass the selected ID as `vaultId` to the note tools.
+1. In the Cloudflare Access self-hosted application, protect `/authorize` and configure a user policy. Make `/mcp`, `/oauth/*`, and OAuth metadata reachable by MCP clients.
+2. Register `https://<hostname>/mcp` in the MCP client. If there is one Vault, MCP uses it automatically. With multiple Vaults, call `list_vaults` and pass the selected ID as `vaultId` to the note tools.
 
 The first connection opens a browser for Access sign-in and approval to read notes. The Worker validates the Cloudflare Access JWT signature, issuer, and audience; the MCP server manages its OAuth tokens.
 

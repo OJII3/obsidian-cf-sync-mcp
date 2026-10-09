@@ -76,11 +76,10 @@ obsidian-cf-sync sync ./vault
 
 ## リモートMCPサーバー
 
-WorkerにリモートMCPを追加すると、AIエージェントから`https://<ホスト名>/mcp`へ接続できます。MCPクライアントの環境変数にService Tokenを置かず、Cloudflare Accessでログインし、ノート読み取り権限をOAuthで許可します。MCPに公開するのはノート一覧・本文取得・本文検索だけです。
+Workerをデプロイすると、AIエージェントから`https://<ホスト名>/mcp`へ接続できます。Cloudflare Accessでログインし、ノート読み取り権限をOAuthで許可します。MCPに公開するのはノート一覧・本文取得・本文検索だけです。
 
-1. Workerをデプロイします。MCPは同期用のAccount/Vault Durable Objectを直接使い、OAuthデータもAccount Durable Objectに保存します。MCP用端末は初回アクセス時に自動登録されるため、Vault ID・端末ID・KV namespace IDやService Tokenの追加設定はありません。
-2. Cloudflare Accessのself-hosted applicationで`/authorize`を保護し、ログインユーザーのポリシーを設定します。`/mcp`、`/oauth/*`、OAuthメタデータはAccessで保護せず、MCPクライアントから到達できるようにします。既存の同期API向けAccess設定はそのまま使えます。
-3. MCPクライアントに`https://<ホスト名>/mcp`を登録します。Vaultが1つならそのVaultを使い、複数ある場合は`list_vaults`で確認したIDを各ノートツールの`vaultId`に指定します。
+1. Cloudflare Accessのself-hosted applicationで`/authorize`を保護し、ログインユーザーのポリシーを設定します。`/mcp`、`/oauth/*`、OAuthメタデータはMCPクライアントから到達できるようにします。
+2. MCPクライアントに`https://<ホスト名>/mcp`を登録します。Vaultが1つならそのVaultを使い、複数ある場合は`list_vaults`で確認したIDを各ノートツールの`vaultId`に指定します。
 
 初回接続時にブラウザが開き、Accessログインとノート読み取り許可を求めます。認可はCloudflare AccessのJWT署名・Issuer・AudienceをWorkerが検証して行います。OAuthトークンはMCPサーバーが管理します。
 
