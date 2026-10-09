@@ -74,6 +74,39 @@ obsidian-cf-sync sync ./vault
 
 その他の使い方は`obsidian-cf-sync --help`を参照してください。
 
+## MCPサーバー
+
+AIエージェントから既存Vaultのノートを読む場合は、別パッケージ`obsidian-cf-sync-mcp`を使います。同期APIから直接読み取り、MCPにはノート一覧・本文取得・本文検索だけを公開します。同期操作や更新操作は公開しません。
+
+```sh
+npm install -g obsidian-cf-sync-mcp
+```
+
+まずCLIで接続用ディレクトリを初期化します。ローカルへ同期する必要はありません。
+
+```sh
+obsidian-cf-sync init ./agent-connection --vault <リモートVault ID>
+```
+
+MCPクライアントの設定例です。`CF_SYNC_VAULT_DIR`は初期化したディレクトリ、AccessのService Tokenは環境変数として渡します。
+
+```json
+{
+  "mcpServers": {
+    "obsidian-cf-sync": {
+      "command": "obsidian-cf-sync-mcp",
+      "env": {
+        "CF_SYNC_VAULT_DIR": "/path/to/agent-connection",
+        "CF_ACCESS_CLIENT_ID": "your-client-id",
+        "CF_ACCESS_CLIENT_SECRET": "your-client-secret"
+      }
+    }
+  }
+}
+```
+
+エージェントに公開するのは読み取りツールだけですが、認証にはCLIと同じCloudflare Access Service Tokenを使います。トークン自体はMCPクライアントの環境変数に設定し、会話やノート本文へ貼り付けないでください。
+
 ## 利用要件と料金
 
 Cloudflareアカウントと、そのアカウント内に自分で構築・管理するサーバーが必要です。サーバーではWorkers・Durable Objects・R2と、Managed OAuthを有効にしたCloudflare Accessを使います。サーバー用のカスタムドメインと、Accessポリシーで許可するメールアドレスも必要です。
