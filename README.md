@@ -74,6 +74,34 @@ obsidian-cf-sync sync ./vault
 
 See `obsidian-cf-sync --help` for more options.
 
+## MCP server
+
+Use the separate `obsidian-cf-sync-mcp` package to let an AI agent read notes from an existing Vault. It reads directly from the sync API and exposes only note listing, note reading, and content search. It does not expose sync or write operations.
+
+```sh
+npm install -g obsidian-cf-sync-mcp
+obsidian-cf-sync init ./agent-connection --vault <remote-vault-id>
+```
+
+The initialized directory is used for its server, Vault, and device binding; it does not need to be synchronized locally. Configure the MCP client with the initialized directory and a Cloudflare Access Service Token:
+
+```json
+{
+  "mcpServers": {
+    "obsidian-cf-sync": {
+      "command": "obsidian-cf-sync-mcp",
+      "env": {
+        "CF_SYNC_VAULT_DIR": "/path/to/agent-connection",
+        "CF_ACCESS_CLIENT_ID": "your-client-id",
+        "CF_ACCESS_CLIENT_SECRET": "your-client-secret"
+      }
+    }
+  }
+}
+```
+
+The MCP server uses the same Cloudflare Access Service Token as the CLI. Keep it in the MCP client's environment rather than pasting it into a conversation or note.
+
 ## Requirements and costs
 
 CF Sync requires a Cloudflare account and a server that you deploy and maintain in that account, using Workers, Durable Objects, R2, and Cloudflare Access with Managed OAuth. You also need a custom domain for the server and an email address allowed by your Access policy.
