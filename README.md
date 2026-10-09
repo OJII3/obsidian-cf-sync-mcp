@@ -29,7 +29,7 @@ Clone this repository and install dependencies with `pnpm install --frozen-lockf
 
 1. Enable R2 in Cloudflare and set `bucket_name` in `packages/worker/wrangler.toml` to your bucket name. To create a bucket, run `pnpm --filter @cf-sync/worker exec wrangler r2 bucket create <bucket-name>`.
 2. Assign your HTTPS hostname to the Worker as a custom domain. Use this origin, without a path, as the server URL in the plugin.
-3. Protect the sync API at `/api/*` with an Access self-hosted application, allow only your email address, and enable Managed OAuth.
+3. Protect `/api/*` and `/authorize` with Cloudflare Access and configure an Allow policy for your email address. Enable Managed OAuth.
 4. Set the allowed OAuth redirect URI to `https://<hostname>/oauth/callback`.
 5. Set the desired access token lifetime to 15 minutes and the Grant session duration to 30 days.
 6. Configure the Worker environment variables below. For local development, put the same values in `packages/worker/.dev.vars`.
@@ -78,8 +78,8 @@ See `obsidian-cf-sync --help` for more options.
 
 Deploy the Worker to expose a remote MCP endpoint at `https://<hostname>/mcp`. MCP clients sign in through Cloudflare Access and authorize read-only note access with OAuth. The MCP server exposes note listing, note reading, and content search only.
 
-1. In the Cloudflare Access self-hosted application, protect `/authorize` and configure a user policy. Make `/mcp`, `/oauth/*`, and OAuth metadata reachable by MCP clients.
-2. Register `https://<hostname>/mcp` in the MCP client. If there is one Vault, MCP uses it automatically. With multiple Vaults, call `list_vaults` and pass the selected ID as `vaultId` to the note tools.
+1. Register `https://<hostname>/mcp` in the MCP client. Make sure `/mcp`, `/oauth/*`, and OAuth metadata are reachable by MCP clients.
+2. If there is one Vault, MCP uses it automatically. With multiple Vaults, call `list_vaults` and pass the selected ID as `vaultId` to the note tools.
 
 The first connection opens a browser for Access sign-in and approval to read notes. The Worker validates the Cloudflare Access JWT signature, issuer, and audience; the MCP server manages its OAuth tokens.
 
