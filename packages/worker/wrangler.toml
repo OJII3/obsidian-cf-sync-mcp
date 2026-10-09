@@ -1,6 +1,12 @@
 name = "obsidian-cf-sync"
 main = "src/index.ts"
 compatibility_date = "2026-09-09"
+compatibility_flags = ["global_fetch_strictly_public"]
+
+[vars]
+MCP_PUBLIC_URL = "https://sync.example.com"
+MCP_VAULT_ID = "replace-with-vault-id"
+MCP_DEVICE_ID = "replace-with-device-id"
 
 [[durable_objects.bindings]]
 name = "ACCOUNT"
@@ -17,6 +23,10 @@ new_sqlite_classes = ["AccountDO", "VaultDO"]
 [[r2_buckets]]
 binding = "BUCKET"
 bucket_name = "obsidian-cf-sync"
+
+[[kv_namespaces]]
+binding = "OAUTH_KV"
+id = "replace-with-oauth-kv-namespace-id"
 
 [observability]
 redact_query_string = true

@@ -74,9 +74,37 @@ obsidian-cf-sync sync ./vault
 
 その他の使い方は`obsidian-cf-sync --help`を参照してください。
 
-## MCPサーバー
+## リモートMCPサーバー
 
-AIエージェントから既存Vaultのノートを読む場合は、別パッケージ`obsidian-cf-sync-mcp`を使います。同期APIから直接読み取り、MCPにはノート一覧・本文取得・本文検索だけを公開します。同期操作や更新操作は公開しません。
+WorkerにリモートMCPを追加すると、AIエージェントから`https://<ホスト名>/mcp`へ接続できます。MCPクライアントの環境変数にService Tokenを置かず、Cloudflare Accessでログインし、ノート読み取り権限をOAuthで許可します。MCPに公開するのはノート一覧・本文取得・本文検索だけです。
+
+1. MCP接続専用の端末を作成します。同期用ディレクトリは不要ですが、初期化時に端末を登録します。
+
+   ```sh
+   obsidian-cf-sync init ./mcp-device --server https://<ホスト名> --vault <リモートVault ID>
+   ```
+
+2. `packages/worker/wrangler.toml`を編集します。`MCP_PUBLIC_URL`はWorkerのオリジン、`MCP_VAULT_ID`と`MCP_DEVICE_ID`は`./mcp-device/.cf-sync/vault.json`の値です。
+3. Cloudflare Accessのself-hosted applicationで`/api/*`と`/authorize`を保護します。ログインユーザーのポリシーとService Authポリシーを設定し、`/authorize`にもログインユーザーが通れるようにします。`/mcp`、`/oauth/*`、OAuthメタデータはAccessで保護せず、MCPクライアントから到達できるようにします。
+4. OAuth用KV namespaceを作成し、そのIDを`wrangler.toml`の`OAUTH_KV`へ設定します。
+
+   ```sh
+   pnpm --filter @cf-sync/worker exec wrangler kv namespace create OAUTH_KV
+   ```
+
+5. 同期APIへの内部接続に使うCloudflare Access Service TokenをWorker Secretに設定し、デプロイします。
+
+   ```sh
+   pnpm --filter @cf-sync/worker exec wrangler secret put CF_ACCESS_CLIENT_ID
+   pnpm --filter @cf-sync/worker exec wrangler secret put CF_ACCESS_CLIENT_SECRET
+   pnpm deploy
+   ```
+
+MCPクライアントには`https://<ホスト名>/mcp`を登録します。初回接続時にブラウザが開き、Accessログインとノート読み取り許可を求めます。認可はCloudflare AccessのJWT署名・Issuer・AudienceをWorkerが検証して行います。OAuthトークンはMCPサーバーが管理します。
+
+## ローカルMCPサーバー
+
+stdio接続で使う場合は、別パッケージ`obsidian-cf-sync-mcp`も利用できます。同期APIから直接読み取り、MCPにはノート一覧・本文取得・本文検索だけを公開します。同期操作や更新操作は公開しません。
 
 ```sh
 npm install -g obsidian-cf-sync-mcp
